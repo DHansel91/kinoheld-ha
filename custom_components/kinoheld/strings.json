@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kinoheld – Kino suchen",
+        "description": "Gib den Namen des Kinos oder der Stadt ein.",
+        "data": {
+          "search_query": "Suchbegriff (z. B. Weiden)"
+        }
+      },
+      "select_cinema": {
+        "title": "Kino auswählen",
+        "description": "Wähle dein Kino aus den Suchergebnissen.",
+        "data": {
+          "cinema_id": "Kino"
+        }
+      },
+      "options": {
+        "title": "Einstellungen",
+        "data": {
+          "cinema_id": "Kino-ID",
+          "cinema_name": "Kino-Name",
+          "cinema_city": "Stadt",
+          "scan_interval": "Aktualisierungsintervall (Minuten)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Kinoheld-Server fehlgeschlagen.",
+      "no_results": "Keine Kinos für diesen Suchbegriff gefunden.",
+      "invalid_cinema": "Ungültiges Kino ausgewählt."
+    },
+    "abort": {
+      "already_configured": "Dieses Kino ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Kinoheld – Optionen",
+        "data": {
+          "scan_interval": "Aktualisierungsintervall (Minuten)"
+        }
+      }
+    }
+  }
+}
