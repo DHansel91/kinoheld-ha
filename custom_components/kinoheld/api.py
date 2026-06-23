@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
 from typing import Any
 
 import aiohttp
@@ -33,7 +32,7 @@ query FetchSearchForAutoSuggest($query: String, $limit: Int! = 25, $types: [Sear
 
 QUERY_PROGRAM_FILTERS = """
 query FetchProgramFilters($cinemaIds: [ID!]!, $showGroups: [String!], $filters: [String!]) {
-  programByMovie(cinemaIds: $cinemaIds, showGroups: $showGroups, first: 0) {
+  programByMovie(cinemaIds: $cinemaIds, showGroups: $showGroups, first: 1) {
     filterOptions(filters: $filters) {
       key
       label
@@ -46,40 +45,42 @@ query FetchProgramFilters($cinemaIds: [ID!]!, $showGroups: [String!], $filters: 
 QUERY_PROGRAM_BY_MOVIE = """
 query FetchProgramByMovie(
   $cinemaIds: [ID!]!,
-  $date: String,
+  $dates: [String!],
   $languageFlags: [String!],
   $technologyFlags: [String!],
   $first: Int! = 50,
-  $after: String
+  $page: Int
 ) {
   programByMovie(
     cinemaIds: $cinemaIds,
-    date: $date,
+    dates: $dates,
     languageFlags: $languageFlags,
     technologyFlags: $technologyFlags,
     first: $first,
-    after: $after
+    page: $page
   ) {
-    edges {
-      node {
-        movie {
-          id
-          title
-          urlSlug
-          duration
-          released
-          genres { id name urlSlug }
-          thumbnailImage { id url width height }
-          posterImage { id url width height }
-        }
-        shows {
-          id
-          beginning
-          flags { languageFlag technologyFlag }
-        }
+    data {
+      movie {
+        id
+        title
+        urlSlug
+        duration
+        released
+        genres { id name urlSlug }
+        thumbnailImage { id url width height }
+        posterImage { id url width height }
+      }
+      shows {
+        id
+        beginning
+        flags { languageFlag technologyFlag }
       }
     }
-    pageInfo { hasNextPage endCursor }
+    paginatorInfo {
+      hasMorePages
+      currentPage
+      lastPage
+    }
   }
 }
 """
@@ -172,33 +173,32 @@ class KinoheldClient:
     async def get_program(
         self,
         cinema_ids: list[str],
-        show_date: date | None = None,
+        show_dates: list[str] | None = None,
         language_flags: list[str] | None = None,
         technology_flags: list[str] | None = None,
     ) -> list[dict[str, Any]]:
-        """Return all movies playing at the given cinemas (auto-paginated)."""
+        """Return all movies playing at the given cinemas (page-based pagination)."""
         variables: dict[str, Any] = {"cinemaIds": cinema_ids, "first": 50}
-        if show_date:
-            variables["date"] = show_date.strftime("%Y-%m-%d")
+        if show_dates:
+            variables["dates"] = show_dates
         if language_flags:
             variables["languageFlags"] = language_flags
         if technology_flags:
             variables["technologyFlags"] = technology_flags
 
         movies: list[dict[str, Any]] = []
-        after: str | None = None
+        page = 1
 
         while True:
-            if after:
-                variables["after"] = after
+            variables["page"] = page
             data = await self._post(QUERY_PROGRAM_BY_MOVIE, variables, "FetchProgramByMovie")
             program = data.get("programByMovie", {})
-            edges = program.get("edges", [])
-            movies.extend(edge["node"] for edge in edges if "node" in edge)
+            items = program.get("data", [])
+            movies.extend(items)
 
-            page_info = program.get("pageInfo", {})
-            if not page_info.get("hasNextPage"):
+            paginator = program.get("paginatorInfo", {})
+            if not paginator.get("hasMorePages") or page >= paginator.get("lastPage", 1):
                 break
-            after = page_info.get("endCursor")
+            page += 1
 
         return movies

@@ -3,12 +3,11 @@
   "name": "Kinoheld",
   "codeowners": ["@DHansel91"],
   "config_flow": true,
+  "dependencies": [],
   "documentation": "https://github.com/DHansel91/kinoheld-ha",
-  "homeassistant": "2024.1.0",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/DHansel91/kinoheld-ha/issues",
-  "quality_scale": "silver",
   "requirements": [],
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
